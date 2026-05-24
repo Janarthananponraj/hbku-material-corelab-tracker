@@ -1,0 +1,1153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Materials Core Lab – Equipment Usage Tracker | HBKU</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --blue-dark:    #003A70;
+    --blue-mid:     #005AA7;
+    --blue-light:   #0072CE;
+    --blue-pale:    #E8F2FC;
+    --blue-border:  #C2D9F0;
+    --gold:         #C9A84C;
+    --gold-light:   #F5EDD4;
+    --white:        #FFFFFF;
+    --surface:      #F4F7FB;
+    --text-primary: #0D1F35;
+    --text-sec:     #4A6080;
+    --text-muted:   #8099B3;
+    --border:       #D4E2F0;
+    --success:      #0C6B38;
+    --success-bg:   #E6F5EE;
+    --error:        #A3001B;
+    --error-bg:     #FCEEF1;
+    --radius:       14px;
+    --radius-sm:    9px;
+    --shadow:       0 2px 14px rgba(0,58,112,0.09);
+    --shadow-lg:    0 8px 40px rgba(0,58,112,0.18);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--surface);
+    color: var(--text-primary);
+    min-height: 100vh;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── HEADER ─────────────────────────────────────────────── */
+  .header {
+    background: linear-gradient(135deg, var(--blue-dark) 0%, var(--blue-mid) 100%);
+    color: #fff;
+    position: sticky; top: 0; z-index: 100;
+    box-shadow: 0 3px 20px rgba(0,58,112,0.35);
+  }
+  .header-inner {
+    max-width: 720px; margin: 0 auto;
+    padding: 12px 16px;
+    display: flex; align-items: center; gap: 14px;
+  }
+  .header-text { flex: 1; min-width: 0; }
+  .header-text h1 {
+    font-size: 14.5px; font-weight: 700;
+    letter-spacing: 0.1px; line-height: 1.25;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .header-text .sub {
+    font-size: 10.5px; opacity: 0.72;
+    letter-spacing: 0.9px; text-transform: uppercase; margin-top: 2px;
+  }
+  .admin-btn {
+    background: rgba(255,255,255,0.13);
+    border: 1.5px solid rgba(255,255,255,0.28);
+    color: #fff; padding: 7px 15px; border-radius: 20px;
+    font-size: 12px; font-family: inherit; cursor: pointer;
+    transition: all .2s; font-weight: 600; white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .admin-btn:hover { background: rgba(255,255,255,0.24); }
+
+  /* ── MAIN ────────────────────────────────────────────────── */
+  .main { max-width: 720px; margin: 0 auto; padding: 22px 14px 60px; }
+
+  /* ── TAB SWITCHER ────────────────────────────────────────── */
+  .tab-switcher {
+    display: grid; grid-template-columns: 1fr 1fr;
+    background: #fff; border-radius: var(--radius);
+    padding: 5px; box-shadow: var(--shadow);
+    margin-bottom: 20px; border: 1px solid var(--border);
+  }
+  .tab-btn {
+    padding: 13px 10px; border: none; border-radius: 10px;
+    font-family: inherit; font-size: 14px; font-weight: 600;
+    cursor: pointer; transition: all .25s; background: transparent;
+    color: var(--text-sec); display: flex; align-items: center;
+    justify-content: center; gap: 7px;
+  }
+  .tab-btn.active { background: var(--blue-mid); color: #fff; box-shadow: 0 3px 14px rgba(0,90,167,0.32); }
+  .tab-btn:not(.active):hover { background: var(--blue-pale); color: var(--blue-mid); }
+
+  /* ── CARD ────────────────────────────────────────────────── */
+  .card {
+    background: #fff; border-radius: var(--radius);
+    box-shadow: var(--shadow); border: 1px solid var(--border);
+    overflow: hidden; animation: slideUp .3s ease;
+  }
+  @keyframes slideUp {
+    from { opacity:0; transform:translateY(8px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
+  .card-header {
+    background: linear-gradient(to right, var(--blue-pale), #fff);
+    padding: 18px 22px; border-bottom: 1px solid var(--border);
+  }
+  .card-header h2 {
+    font-size: 16px; font-weight: 700; color: var(--blue-dark);
+    display: flex; align-items: center; gap: 9px;
+  }
+  .card-header p { font-size: 13px; color: var(--text-sec); margin-top: 3px; }
+  .card-body { padding: 22px; }
+
+  /* ── FORM ────────────────────────────────────────────────── */
+  .form-grid { display: flex; flex-direction: column; gap: 16px; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 480px) { .form-row { grid-template-columns: 1fr; } }
+
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  .field label {
+    font-size: 11.5px; font-weight: 600; color: var(--text-sec);
+    letter-spacing: 0.5px; text-transform: uppercase;
+  }
+  .req { color: var(--blue-light); margin-left: 2px; }
+  .field-hint { font-size: 11px; color: var(--text-muted); margin-top: -2px; }
+
+  .field input, .field select, .field textarea {
+    font-family: inherit; font-size: 14px; padding: 10px 13px;
+    border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+    color: var(--text-primary); background: #fff;
+    transition: border-color .18s, box-shadow .18s;
+    width: 100%; outline: none; appearance: none;
+  }
+  .field select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 10'%3E%3Cpath fill='%234A6080' d='M0 0l8 10 8-10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 13px center;
+    background-size: 10px; padding-right: 34px; cursor: pointer;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus {
+    border-color: var(--blue-light);
+    box-shadow: 0 0 0 3px rgba(0,114,206,0.12);
+  }
+  .field textarea { resize: vertical; min-height: 78px; }
+  .field input::placeholder, .field textarea::placeholder { color: var(--text-muted); }
+  .field input[readonly] { background: var(--blue-pale); cursor: default; color: var(--text-sec); }
+
+  /* ── EQUIPMENT CUSTOM DROPDOWN ───────────────────────────── */
+  .eq-wrap { position: relative; }
+  .eq-input {
+    font-family: inherit; font-size: 14px; padding: 10px 13px 10px 38px;
+    border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+    color: var(--text-primary); background: #fff; width: 100%;
+    outline: none; transition: border-color .18s, box-shadow .18s; cursor: pointer;
+  }
+  .eq-input:focus { border-color: var(--blue-light); box-shadow: 0 0 0 3px rgba(0,114,206,0.12); }
+  .eq-icon { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); font-size: 15px; pointer-events: none; }
+  .eq-drop {
+    position: absolute; top: calc(100% + 5px); left: 0; right: 0;
+    background: #fff; border: 1.5px solid var(--blue-border);
+    border-radius: var(--radius-sm); max-height: 270px; overflow-y: auto;
+    z-index: 300; box-shadow: var(--shadow-lg); display: none;
+  }
+  .eq-drop.open { display: block; }
+  .eq-group {
+    padding: 7px 12px 4px; font-size: 10px; font-weight: 700;
+    letter-spacing: 0.9px; text-transform: uppercase; color: var(--text-muted);
+    background: var(--blue-pale); border-top: 1px solid var(--blue-border);
+    position: sticky; top: 0;
+  }
+  .eq-group:first-child { border-top: none; }
+  .eq-item {
+    padding: 9px 13px; font-size: 13.5px; cursor: pointer;
+    transition: background .13s; border-left: 3px solid transparent;
+  }
+  .eq-item:hover, .eq-item.hi { background: var(--blue-pale); border-left-color: var(--blue-light); color: var(--blue-dark); }
+  .eq-item.sel { background: #EBF4FF; border-left-color: var(--blue-dark); font-weight: 600; }
+  .eq-none { padding: 16px; text-align: center; color: var(--text-muted); font-size: 13px; }
+
+  /* disabled state when no lab selected */
+  .eq-input.disabled { background: #f0f4f8; color: var(--text-muted); cursor: not-allowed; }
+
+  /* ── BUTTONS ─────────────────────────────────────────────── */
+  .submit-btn {
+    width: 100%; padding: 14px; border: none; border-radius: var(--radius-sm);
+    font-family: inherit; font-size: 15px; font-weight: 700; cursor: pointer;
+    letter-spacing: 0.2px; transition: all .2s;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    margin-top: 4px;
+  }
+  .btn-start { background: var(--blue-mid); color: #fff; box-shadow: 0 4px 14px rgba(0,90,167,0.3); }
+  .btn-start:hover { background: var(--blue-dark); transform: translateY(-1px); box-shadow: 0 6px 18px rgba(0,58,112,0.38); }
+  .btn-complete { background: var(--success); color: #fff; box-shadow: 0 4px 14px rgba(12,107,56,0.28); }
+  .btn-complete:hover { background: #084d28; transform: translateY(-1px); }
+  .submit-btn:active { transform: translateY(0); }
+
+  /* ── TOAST ───────────────────────────────────────────────── */
+  .toast {
+    position: fixed; top: 80px; left: 50%;
+    transform: translateX(-50%) translateY(-16px);
+    background: #fff; border-radius: var(--radius);
+    padding: 14px 20px; box-shadow: var(--shadow-lg);
+    border-left: 4px solid var(--success);
+    max-width: 360px; width: calc(100% - 28px);
+    opacity: 0; transition: all .35s cubic-bezier(.34,1.56,.64,1);
+    z-index: 999; pointer-events: none;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .toast.err { border-left-color: var(--error); }
+  .toast-title { font-size: 13.5px; font-weight: 700; }
+  .toast-msg { font-size: 12.5px; color: var(--text-sec); margin-top: 3px; }
+  .toast-id {
+    font-family: 'JetBrains Mono', monospace; font-size: 11.5px;
+    color: var(--blue-mid); background: var(--blue-pale);
+    padding: 3px 8px; border-radius: 5px; display: inline-block; margin-top: 6px;
+  }
+
+  /* ── ACTIVE SESSIONS ──────────────────────────────────────── */
+  .sessions-panel { margin-top: 20px; }
+  .sessions-hdr {
+    display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;
+  }
+  .sessions-hdr h3 { font-size: 12px; font-weight: 700; color: var(--text-sec); text-transform: uppercase; letter-spacing: 0.6px; }
+  .sess-count { background: var(--blue-mid); color: #fff; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+  .sess-card {
+    background: #fff; border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm); padding: 12px 15px;
+    margin-bottom: 8px; display: flex; align-items: center; gap: 11px;
+  }
+  .sess-dot {
+    width: 9px; height: 9px; background: #22c55e;
+    border-radius: 50%; flex-shrink: 0;
+    box-shadow: 0 0 0 3px rgba(34,197,94,.18);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%,100%{box-shadow:0 0 0 3px rgba(34,197,94,.18);}
+    50%{box-shadow:0 0 0 6px rgba(34,197,94,.07);}
+  }
+  .sess-info { flex: 1; min-width: 0; }
+  .sess-user { font-size: 13px; font-weight: 600; }
+  .sess-eq { font-size: 11.5px; color: var(--text-sec); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .sess-time { font-size: 11px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; }
+  .sess-badge {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    background: var(--blue-pale); color: var(--blue-dark);
+    padding: 3px 7px; border-radius: 5px; flex-shrink: 0;
+  }
+  .no-msg { text-align: center; padding: 28px; color: var(--text-muted); font-size: 13.5px; }
+  .no-msg .ico { font-size: 32px; margin-bottom: 8px; }
+
+  /* ── COMPLETE PANEL ──────────────────────────────────────── */
+  .complete-section { display: flex; flex-direction: column; gap: 16px; }
+
+  /* ── ADMIN MODAL ─────────────────────────────────────────── */
+  .overlay {
+    position: fixed; inset: 0; background: rgba(0,29,56,.55);
+    backdrop-filter: blur(4px); z-index: 500; display: none;
+    align-items: center; justify-content: center; padding: 14px;
+  }
+  .overlay.open { display: flex; }
+  .modal {
+    background: #fff; border-radius: var(--radius); box-shadow: var(--shadow-lg);
+    width: 100%; max-width: 760px; max-height: 90vh;
+    overflow: hidden; display: flex; flex-direction: column;
+    animation: mIn .3s cubic-bezier(.34,1.4,.64,1);
+  }
+  @keyframes mIn { from{opacity:0;transform:scale(.93)}to{opacity:1;transform:scale(1)} }
+  .modal-head {
+    padding: 17px 22px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    background: linear-gradient(135deg, var(--blue-dark), var(--blue-mid));
+    color: #fff; flex-shrink: 0;
+  }
+  .modal-head h2 { font-size: 15px; font-weight: 700; }
+  .modal-close {
+    background: rgba(255,255,255,.16); border: none; color: #fff;
+    width: 30px; height: 30px; border-radius: 50%; cursor: pointer;
+    font-size: 17px; display: flex; align-items: center; justify-content: center;
+    transition: background .18s;
+  }
+  .modal-close:hover { background: rgba(255,255,255,.28); }
+  .modal-body { overflow-y: auto; flex: 1; }
+  .modal-toolbar {
+    padding: 14px 20px; border-bottom: 1px solid var(--border);
+    display: flex; gap: 9px; align-items: center; flex-wrap: wrap;
+  }
+  .modal-toolbar input {
+    flex: 1; min-width: 150px; padding: 8px 13px;
+    border: 1.5px solid var(--border); border-radius: 20px;
+    font-family: inherit; font-size: 13px; outline: none;
+  }
+  .modal-toolbar input:focus { border-color: var(--blue-light); }
+  .exp-btn {
+    padding: 8px 16px; border: none; border-radius: 20px;
+    font-family: inherit; font-size: 12.5px; font-weight: 600;
+    cursor: pointer; transition: all .18s; display: flex; align-items: center; gap: 5px;
+  }
+  .btn-csv { background: var(--blue-pale); color: var(--blue-dark); border: 1.5px solid var(--blue-border); }
+  .btn-csv:hover { background: var(--blue-border); }
+  .btn-xls { background: var(--blue-mid); color: #fff; }
+  .btn-xls:hover { background: var(--blue-dark); }
+  .stats-bar {
+    display: grid; grid-template-columns: repeat(3,1fr); gap: 10px;
+    padding: 14px 20px; border-bottom: 1px solid var(--border);
+  }
+  .stat-box { background: var(--blue-pale); border-radius: var(--radius-sm); padding: 11px; text-align: center; }
+  .stat-val { font-size: 22px; font-weight: 800; color: var(--blue-dark); }
+  .stat-lbl { font-size: 10.5px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; margin-top: 2px; }
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  th {
+    background: var(--blue-pale); padding: 9px 12px; text-align: left;
+    font-size: 10.5px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .5px; color: var(--text-sec); border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  td { padding: 9px 12px; border-bottom: 1px solid #EEF3F9; }
+  tr:hover td { background: var(--blue-pale); }
+  .s-active { color:#16a34a; font-weight:700; }
+  .s-done { color: var(--text-muted); }
+  .mono { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; }
+
+  /* ── ADMIN LOGIN ─────────────────────────────────────────── */
+  .login-wrap { padding: 36px; display: flex; flex-direction: column; gap: 14px; max-width: 320px; margin: 0 auto; }
+  .login-wrap h3 { font-size: 15px; font-weight: 700; color: var(--blue-dark); text-align: center; }
+  .login-wrap input {
+    padding: 11px 14px; border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm); font-family: inherit;
+    font-size: 14px; outline: none; width: 100%;
+  }
+  .login-wrap input:focus { border-color: var(--blue-light); }
+  .login-wrap button {
+    padding: 11px; background: var(--blue-mid); color: #fff;
+    border: none; border-radius: var(--radius-sm);
+    font-family: inherit; font-size: 14px; font-weight: 700; cursor: pointer;
+  }
+  .login-wrap button:hover { background: var(--blue-dark); }
+  .login-err { color: var(--error); font-size: 12.5px; text-align: center; }
+  .req-note { font-size: 11.5px; color: var(--text-muted); margin-bottom: 2px; }
+  .req-note span { color: var(--blue-light); }
+
+  /* session detail box */
+  .detail-box {
+    background: var(--blue-pale); border: 1px solid var(--blue-border);
+    border-radius: var(--radius-sm); padding: 13px 15px; font-size: 13px;
+  }
+  .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .detail-lbl { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--text-muted); }
+  .detail-val { font-weight: 600; margin-top: 2px; font-size: 13px; }
+</style>
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<header class="header">
+  <div class="header-inner">
+    <div class="header-text">
+      <h1>Materials Core Lab — HBKU</h1>
+      <p class="sub">Equipment Usage Tracker</p>
+    </div>
+    <button class="admin-btn" onclick="openAdmin()">⚙ Admin</button>
+  </div>
+</header>
+
+<!-- ── TOAST ── -->
+<div class="toast" id="toast">
+  <div class="toast-title" id="toast-title"></div>
+  <div class="toast-msg" id="toast-msg"></div>
+  <div class="toast-id" id="toast-id" style="display:none"></div>
+</div>
+
+<main class="main">
+  <!-- TAB SWITCHER -->
+  <div class="tab-switcher">
+    <button class="tab-btn active" id="tab-start" onclick="switchTab('start')">
+      <span>▶</span> Start Session
+    </button>
+    <button class="tab-btn" id="tab-complete" onclick="switchTab('complete')">
+      <span>✓</span> Complete Session
+    </button>
+  </div>
+
+  <!-- ── START SESSION ── -->
+  <div id="panel-start">
+    <div class="card">
+      <div class="card-header">
+        <h2>🔬 Start Equipment Session</h2>
+        <p>Fill in all required fields to begin your session</p>
+      </div>
+      <div class="card-body">
+        <p class="req-note"><span>*</span> Required field</p>
+        <div class="form-grid">
+
+          <!-- Row 1 -->
+          <div class="form-row">
+            <div class="field">
+              <label>Full Name <span class="req">*</span></label>
+              <input type="text" id="s-name" placeholder="e.g. Ahmed Al-Mansouri" autocomplete="name">
+            </div>
+            <div class="field">
+              <label>Organization <span class="req">*</span></label>
+              <select id="s-dept">
+                <option value="">Select Organization</option>
+                <optgroup label="HBKU">
+                  <option>HBKU – College of Science &amp; Engineering (CSE)</option>
+                  <option>HBKU – College of Health &amp; Life Sciences (CHLS)</option>
+                  <option>HBKU – College of Islamic Studies (CIS)</option>
+                  <option>HBKU – College of Humanities &amp; Social Sciences (CHSS)</option>
+                  <option>HBKU – College of Law (CL)</option>
+                  <option>HBKU – College of Public Policy (CPP)</option>
+                </optgroup>
+                <optgroup label="Qatar Foundation Research Institutes">
+                  <option>QEERI – Qatar Environment &amp; Energy Research Institute</option>
+                  <option>QBRI – Qatar Biomedical Research Institute</option>
+                  <option>QRI – Qatar Research Institute</option>
+                  <option>QCRI – Qatar Computing Research Institute</option>
+                </optgroup>
+                <optgroup label="Other">
+                  <option>Qatar University (QU)</option>
+                  <option>Texas A&amp;M at Qatar (TAMUQ)</option>
+                  <option>Carnegie Mellon Qatar (CMU-Q)</option>
+                  <option>Northwestern Qatar (MEDILL)</option>
+                  <option>Georgetown Qatar (SFS-Q)</option>
+                  <option>VCUarts Qatar</option>
+                  <option>External / Industry</option>
+                  <option>Other</option>
+                </optgroup>
+              </select>
+            </div>
+          </div>
+
+          <!-- Row 2 -->
+          <div class="form-row">
+            <div class="field">
+              <label>Lab Room <span class="req">*</span></label>
+              <select id="s-lab" onchange="onLabChange()">
+                <option value="">Select Lab Room</option>
+                <option value="SEM">Scanning Electron Microscopy – D077</option>
+                <option value="TEM">Transmission Electron Microscopy – D079</option>
+                <option value="OPT">Optical / Confocal / Fluorescence – D076</option>
+                <option value="XRD">X-ray &amp; Surface Science – D074</option>
+                <option value="NMR">Nuclear Magnetic Resonance – D071</option>
+                <option value="TGA">Thermal Analysis – D073</option>
+                <option value="PRO">Profilometry – D075</option>
+                <option value="SAM">Sample Preparation – D072</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Analysis Request No. <span class="req">*</span></label>
+              <input type="text" id="s-req" placeholder="e.g. MCL-2026-0123">
+              <span class="field-hint">Format: MCL-2026-XXXX</span>
+            </div>
+          </div>
+
+          <!-- Equipment -->
+          <div class="field">
+            <label>Equipment <span class="req">*</span></label>
+            <div class="eq-wrap">
+              <span class="eq-icon">🔍</span>
+              <input type="text" class="eq-input disabled" id="eq-search"
+                     placeholder="Select a lab room first…"
+                     autocomplete="off" readonly>
+              <input type="hidden" id="s-equip">
+              <div class="eq-drop" id="eq-drop"></div>
+            </div>
+          </div>
+
+          <!-- Row 3 -->
+          <div class="form-row">
+            <div class="field">
+              <label>No. of Samples <span class="req">*</span></label>
+              <input type="number" id="s-samples" min="1" max="999" placeholder="1">
+            </div>
+            <div class="field">
+              <label>Technique / Method <span class="req">*</span></label>
+              <input type="text" id="s-technique" placeholder="e.g. Grinding, polishing, SEM imaging…">
+            </div>
+          </div>
+
+          <!-- Remarks -->
+          <div class="field">
+            <label>Remarks / Notes</label>
+            <textarea id="s-remarks" placeholder="Sample details, special conditions, or any other notes…"></textarea>
+          </div>
+
+          <button class="submit-btn btn-start" onclick="startSession()">
+            ▶ &nbsp; Start Session
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Active Sessions -->
+    <div class="sessions-panel">
+      <div class="sessions-hdr">
+        <h3>🟢 Active Sessions</h3>
+        <span class="sess-count" id="active-count">0</span>
+      </div>
+      <div id="active-sessions-list"></div>
+    </div>
+  </div>
+
+  <!-- ── COMPLETE SESSION ── -->
+  <div id="panel-complete" style="display:none">
+    <div class="card">
+      <div class="card-header">
+        <h2>✅ Complete Equipment Session</h2>
+        <p>Select your active session to close and record end time</p>
+      </div>
+      <div class="card-body">
+        <div class="complete-section" id="complete-body"></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- ── ADMIN MODAL ── -->
+<div class="overlay" id="admin-overlay" onclick="overlayClick(event)">
+  <div class="modal">
+    <div class="modal-head">
+      <h2>⚙ Admin Dashboard — Usage Records</h2>
+      <button class="modal-close" onclick="closeAdmin()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="admin-login-wrap">
+        <div class="login-wrap">
+          <div style="font-size:40px;text-align:center">🔐</div>
+          <h3>Admin Access Required</h3>
+          <input type="password" id="admin-pw" placeholder="Enter admin password"
+                 onkeydown="if(event.key==='Enter') adminLogin()">
+          <button onclick="adminLogin()">Login</button>
+          <p class="login-err" id="admin-err"></p>
+        </div>
+      </div>
+      <div id="admin-content-wrap" style="display:none">
+        <div class="stats-bar" id="stats-bar"></div>
+        <div class="modal-toolbar">
+          <input type="text" id="admin-search" placeholder="🔍  Search records…" oninput="renderTable()">
+          <input type="date" id="admin-date-from" title="From date" onchange="renderTable()" style="padding:8px 10px;border:1.5px solid var(--border);border-radius:20px;font-family:inherit;font-size:13px;outline:none;color:var(--text-primary);">
+          <input type="date" id="admin-date-to" title="To date" onchange="renderTable()" style="padding:8px 10px;border:1.5px solid var(--border);border-radius:20px;font-family:inherit;font-size:13px;outline:none;color:var(--text-primary);">
+          <button class="exp-btn" onclick="clearDateFilter()" style="background:var(--surface);color:var(--text-sec);border:1.5px solid var(--border);">✕ Clear</button>
+          <button class="exp-btn btn-csv" onclick="exportCSV()">⬇ CSV</button>
+          <button class="exp-btn btn-xls" onclick="exportXLSX()">⬇ XLSX</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>Session ID</th><th>User</th><th>Organization</th><th>Lab</th>
+              <th>Equipment</th><th>Request No.</th><th>Samples</th>
+              <th>Technique</th><th>Date</th><th>Start</th><th>End</th>
+              <th>Duration</th><th>Status</th><th>Outcome</th><th>Issues</th><th>Remarks</th><th>Completion Remarks</th>
+            </tr></thead>
+            <tbody id="records-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── EQUIPMENT DATA BY LAB ─────────────────────────────────────────────────────
+const EQ_BY_LAB = {
+  SEM: [
+    "JEOL – JSM 7800F",
+    "JEOL – JSM 7610F w/ Cryo Stage",
+    "FEI – Quanta 650 FEG",
+    "JEOL – JXA 8530F (EPMA)",
+    "FEI – Versa 3D LoVac (FIB-SEM)"
+  ],
+  TEM: [
+    "FEI – Talos F200X",
+    "FEI – Talos F200C"
+  ],
+  OPT: [
+    "Nikon – CiL (Upright)",
+    "Nikon – N-STORM (Super-Res)",
+    "Nikon – Eclipse L-200N",
+    "Nikon – SMZ-25 (Stereo)",
+    "Nikon – SMZ-445 (Stereo)",
+    "Nikon – SM Z25",
+    "LEICA – TCS SP8 AOBS (Confocal)",
+    "Bruker – Dimension Icon AFM (Unit 1)",
+    "Bruker – Dimension Icon AFM (Unit 2)",
+    "Kruss – Contact Angle DSA-25E",
+    "Kruss – Contact Angle DSA-100E",
+    "KRUSS – K100 (Tensiometer)",
+    "Quantum Design / LOT Oriel – PPMS DynaCool"
+  ],
+  XRD: [
+    "Rigaku – ZSX Primus II (XRF)",
+    "Rigaku – SmartLab (XRD, Unit 1)",
+    "Rigaku – SmartLab (XRD, Unit 2)",
+    "Rigaku – S-Max 3000 (SAXS)",
+    "Bruker – D8 Venture (SCXRD)",
+    "Bruker – D8 Advance (PXRD)",
+    "Horiba Jobin Yvon – XGT-7200 V (µ-XRF)",
+    "JEOL – JAMP-9510F (AES/SAM)",
+    "ION-TOF – TOF.SIMS 5-100"
+  ],
+  NMR: [
+    "Bruker – DNP-NMR 600 MHz (Solid-State)",
+    "Bruker – Avance III HD 800 MHz (Solution, 4K)"
+  ],
+  TGA: [
+    "TA Instruments – Discovery TGA",
+    "TA Instruments – DSC Q2000 (Unit 1)",
+    "TA Instruments – DSC Q2000 (Unit 2)",
+    "TA Instruments – SDT Q600 (TGA-DSC)",
+    "TA Instruments – Q400 (TMA)",
+    "TA Instruments – Q800 (DMA)",
+    "TA Instruments – RH2 (Sorption)",
+    "TA Instruments – DIL 806 (Dilatometer)",
+    "Netzsch – STA 449 (TGA-DSC)",
+    "Netzsch – LFA 467 (Thermal Diffusivity)",
+    "Mettler – Zeta Series (Particle Size)",
+    "Thermo Scientific – Nicolet iS50R / Continuum ATR",
+    "Thermo Scientific – FT-IR &amp; Raman System",
+    "Perkin Elmer – Lambda 1050 (UV-Vis-NIR)",
+    "Thermo Scientific – DXR SmartRaman"
+  ],
+  PRO: [
+    "KLA Tencor – P-17 (Stylus Profilometer)",
+    "Bruker – DektakXT DXT-A (Profilometer)",
+    "ZYGO – NewView 7300 (Optical Profilometer)"
+  ],
+  SAM: [
+    "Buehler – MetaServ 250 (Polisher)",
+    "Buehler – EcoMet 250 (Polisher)",
+    "Buehler – Isomet 5000 (Precision Saw)",
+    "Buehler – SimpliMet 3000 (Mounting Press)",
+    "Quorum – Q150R S (Rotary Sputter Coater)",
+    "Quorum – Q150T ES (Turbo Sputter/C Coater)",
+    "GATAN – 656 (Dimple Grinder)",
+    "GATAN – 695 (Precision Etching)",
+    "GATAN – 601.502",
+    "GATAN – 623-40 (Liquid N2 Cryo Transfer)",
+    "GATAN – 601 (Solarus Cleaner)",
+    "GATAN – 685 (Vacuum Cryo Transfer)",
+    "LEICA – EM UC7 / FC7 / KMR3 / EM CTD (Ultramicrotome)",
+    "JEOL – IB-09020CP (Cross-Section Polisher)",
+    "JEOL – HLA-2",
+    "JEOL – MS-160",
+    "JEOL – JEE-420T (Evaporator)",
+    "JEOL – JII-29010CSHPR (Ion Sputter Coater)",
+    "JEOL/NISSIN – VM-303D",
+    "JEOL/Nikon – SM5",
+    "SPI – Q140 (Carbon Coater)",
+    "SPI – Q210",
+    "SPI – Q90",
+    "Retsch – PP40 (Pellet Press)",
+    "Retsch – PP25 (Pellet Press)",
+    "Retsch – PM400 (Planetary Mill)",
+    "Retsch – PM200 (Planetary Mill)",
+    "Retsch – AS200 (Vibratory Sieve Shaker)",
+    "MTI Corporation – 100T (Press)",
+    "MTI Corporation – PDC-366 (Plasma Cleaner)",
+    "Sartorius – ENTRIS323-1S (Balance)",
+    "Laurell – WS-650HZ-23NPPB (Spin Coater)",
+    "FEI – Vitrobot Mark IV (Cryo-Plunge)",
+    "Fisher / Heratherm – 51028113 (Oven)",
+    "Pace Technologies – MHV-2000 (Micro-Hardness)",
+    "ModuTemp – Fusomatic 15 SCF15",
+    "Fritsch – Pulverisette 5 (Planetary Mill)",
+    "Struers – CitoVac 05926119 (Vacuum Impregnation)",
+    "Elma – Transsonic TI-H-10 (Ultrasonic Bath)",
+    "Purite – Select Ondeo IS (Water Purifier)"
+  ]
+};
+
+// ── STATE ─────────────────────────────────────────────────────────────────────
+let sessions = JSON.parse(localStorage.getItem('hbku_sessions') || '[]');
+let adminLoggedIn = false;
+const ADMIN_PW = 'MCL@HBKU2024';   // ← change this
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbykEiqoJpuPxym_17KTQYAmaHIGB3-2gKAnT37FSnGolIHVrgcRXrKZyykU2dFAucBu/exec';
+
+// ── EQUIPMENT DROPDOWN ────────────────────────────────────────────────────────
+let selectedEquip = '';
+let eqOpen = false;
+
+function onLabChange() {
+  const labKey = document.getElementById('s-lab').value;
+  const inp = document.getElementById('eq-search');
+  selectedEquip = '';
+  document.getElementById('s-equip').value = '';
+  inp.value = '';
+  if (!labKey) {
+    inp.placeholder = 'Select a lab room first…';
+    inp.classList.add('disabled');
+    inp.setAttribute('readonly','');
+    inp.onclick = null;
+  } else {
+    inp.placeholder = 'Search or select equipment…';
+    inp.classList.remove('disabled');
+    inp.setAttribute('readonly','');
+    inp.onclick = () => openEqDrop();
+  }
+  document.getElementById('eq-drop').classList.remove('open');
+}
+
+function buildEqDrop(filter) {
+  const labKey = document.getElementById('s-lab').value;
+  const items = EQ_BY_LAB[labKey] || [];
+  const lf = filter.toLowerCase();
+  const filtered = filter ? items.filter(i => i.toLowerCase().includes(lf)) : items;
+  if (!filtered.length) {
+    document.getElementById('eq-drop').innerHTML = '<div class="eq-none">No equipment found</div>';
+    return;
+  }
+  document.getElementById('eq-drop').innerHTML = filtered.map(i => {
+    const sel = i === selectedEquip ? ' sel' : '';
+    return `<div class="eq-item${sel}" onclick="selectEq('${i.replace(/'/g,"\\'").replace(/&amp;/g,'&')}')">${i}</div>`;
+  }).join('');
+}
+
+function openEqDrop() {
+  const inp = document.getElementById('eq-search');
+  inp.removeAttribute('readonly');
+  inp.oninput = () => buildEqDrop(inp.value);
+  buildEqDrop('');
+  document.getElementById('eq-drop').classList.add('open');
+  eqOpen = true;
+  inp.focus();
+}
+
+function selectEq(val) {
+  selectedEquip = val;
+  document.getElementById('eq-search').value = val;
+  document.getElementById('s-equip').value = val;
+  document.getElementById('eq-drop').classList.remove('open');
+  eqOpen = false;
+  document.getElementById('eq-search').setAttribute('readonly','');
+}
+
+document.addEventListener('click', e => {
+  if (eqOpen && !e.target.closest('.eq-wrap')) {
+    document.getElementById('eq-drop').classList.remove('open');
+    eqOpen = false;
+    if (!selectedEquip) {
+      document.getElementById('eq-search').value = '';
+      document.getElementById('eq-search').setAttribute('readonly','');
+    }
+  }
+});
+
+// ── TABS ──────────────────────────────────────────────────────────────────────
+function switchTab(t) {
+  document.getElementById('panel-start').style.display   = t==='start'    ? '' : 'none';
+  document.getElementById('panel-complete').style.display = t==='complete' ? '' : 'none';
+  document.getElementById('tab-start').classList.toggle('active',   t==='start');
+  document.getElementById('tab-complete').classList.toggle('active', t==='complete');
+  if (t==='complete') renderCompletePanel();
+}
+
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+function genID() {
+  const n = new Date();
+  const ts = String(n.getMonth()+1).padStart(2,'0') +
+             String(n.getDate()).padStart(2,'0')     +
+             String(n.getHours()).padStart(2,'0')    +
+             String(n.getMinutes()).padStart(2,'0');
+  const r = Math.random().toString(36).slice(2,5).toUpperCase();
+  return `MCL-${n.getFullYear()}-${ts}${r}`;
+}
+const fmtT = iso => iso ? new Date(iso).toLocaleTimeString('en-QA',{hour:'2-digit',minute:'2-digit',hour12:true}) : '—';
+const fmtD = iso => iso ? new Date(iso).toLocaleDateString('en-QA',{day:'2-digit',month:'short',year:'numeric'}) : '—';
+function calcDur(s, e) {
+  if (!s||!e) return '—';
+  const ms = new Date(e)-new Date(s);
+  return `${Math.floor(ms/3600000)}h ${Math.floor((ms%3600000)/60000)}m`;
+}
+function calcHrs(s, e) {
+  if (!s||!e) return '—';
+  return ((new Date(e)-new Date(s))/3600000).toFixed(2)+' hrs';
+}
+function save() { localStorage.setItem('hbku_sessions', JSON.stringify(sessions)); }
+
+function sendToGoogleSheet(payload) {
+  return fetch(GOOGLE_SCRIPT_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify(payload)
+  }).catch(err => {
+    console.error('Google Sheets sync failed:', err);
+  });
+}
+
+
+// ── START SESSION ─────────────────────────────────────────────────────────────
+function startSession() {
+  const name    = document.getElementById('s-name').value.trim();
+  const dept    = document.getElementById('s-dept').value;
+  const lab     = document.getElementById('s-lab').value;
+  const equip   = document.getElementById('s-equip').value;
+  const req     = document.getElementById('s-req').value.trim();
+  const samples = document.getElementById('s-samples').value;
+  const tech    = document.getElementById('s-technique').value;
+  const rem     = document.getElementById('s-remarks').value.trim();
+
+  if (!name||!dept||!lab||!equip||!req||!samples||!tech) {
+    showToast('Missing Fields','Please fill in all required fields.',null,true); return;
+  }
+  if (sessions.find(s=>s.status==='active'&&s.name.toLowerCase()===name.toLowerCase()&&s.equipment===equip)) {
+    showToast('Duplicate Session',`${name} already has an active session on this equipment.`,null,true); return;
+  }
+
+  const labLabels = {
+    SEM:'Scanning Electron Microscopy – D077',
+    TEM:'Transmission Electron Microscopy – D079',
+    OPT:'Optical / Confocal / Fluorescence – D076',
+    XRD:'X-ray & Surface Science – D074',
+    NMR:'Nuclear Magnetic Resonance – D071',
+    TGA:'Thermal Analysis – D073',
+    PRO:'Profilometry – D075',
+    SAM:'Sample Preparation – D072'
+  };
+
+  const s = {
+    id: genID(), status:'active',
+    name, dept, lab: labLabels[lab]||lab, equipment: equip,
+    requestNo: req, samples: parseInt(samples), technique: tech, remarks: rem,
+    startTime: new Date().toISOString(), endTime: null, completionRemarks: ''
+  };
+  sessions.push(s); save();
+  sendToGoogleSheet({
+    action: 'start',
+    sessionID: s.id,
+    name: s.name,
+    organization: s.dept,
+    lab: s.lab,
+    equipment: s.equipment,
+    requestNo: s.requestNo,
+    samples: s.samples,
+    technique: s.technique,
+    remarks: s.remarks,
+    startTime: s.startTime,
+    endTime: '',
+    duration: '',
+    outcome: '',
+    issues: '',
+    completionRemarks: '',
+    status: 'active'
+  });
+  renderActiveSessions();
+  resetStart();
+  showToast('Session Started ✓', s.equipment.split('–')[1]?.trim()||s.equipment, s.id, false);
+  // auto-copy session ID to clipboard
+  if (navigator.clipboard) navigator.clipboard.writeText(s.id).catch(()=>{});
+}
+
+function resetStart() {
+  ['s-name','s-req','s-samples','s-remarks'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('s-dept').value='';
+  document.getElementById('s-lab').value='';
+  document.getElementById('s-technique').value='';
+  document.getElementById('s-equip').value='';
+  const inp=document.getElementById('eq-search');
+  inp.value=''; inp.placeholder='Select a lab room first…';
+  inp.classList.add('disabled'); inp.setAttribute('readonly',''); inp.onclick=null;
+  selectedEquip='';
+}
+
+// ── ACTIVE SESSIONS LIST ──────────────────────────────────────────────────────
+function renderActiveSessions() {
+  const active = sessions.filter(s=>s.status==='active');
+  document.getElementById('active-count').textContent = active.length;
+  const el = document.getElementById('active-sessions-list');
+  if (!active.length) {
+    el.innerHTML='<div class="no-msg"><div class="ico">📋</div>No active sessions</div>'; return;
+  }
+  el.innerHTML = active.map(s=>`
+    <div class="sess-card">
+      <div class="sess-dot"></div>
+      <div class="sess-info">
+        <div class="sess-user">${s.name}</div>
+        <div class="sess-eq">${s.equipment}</div>
+        <div class="sess-time">Started ${fmtD(s.startTime)} at ${fmtT(s.startTime)}</div>
+      </div>
+      <div class="sess-badge">${s.id}</div>
+    </div>`).join('');
+}
+
+// ── COMPLETE PANEL ────────────────────────────────────────────────────────────
+function renderCompletePanel() {
+  const body = document.getElementById('complete-body');
+  body.innerHTML=`
+    <div class="field">
+      <label>Session ID <span class="req">*</span></label>
+      <div style="display:flex;gap:8px;align-items:flex-start">
+        <input type="text" id="c-sid-input" placeholder="e.g. MCL-2026-07141530ABC" style="flex:1;font-family:'JetBrains Mono',monospace;font-size:13px;padding:10px 13px;border:1.5px solid var(--border);border-radius:var(--radius-sm);outline:none;" oninput="lookupSession()">
+        <button onclick="lookupSession()" style="padding:10px 16px;background:var(--blue-mid);color:#fff;border:none;border-radius:var(--radius-sm);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;">Look up</button>
+      </div>
+      <div id="c-lookup-hint" style="font-size:11.5px;color:var(--text-muted);margin-top:4px">Enter your session ID or select from active sessions below</div>
+    </div>
+    <div class="field" style="margin-top:-4px">
+      <label style="font-size:10.5px">— or pick from active sessions —</label>
+      <select id="c-sel" onchange="onSelectActive()" style="font-size:13px;padding:8px 13px;border:1.5px solid var(--border);border-radius:var(--radius-sm);width:100%;font-family:inherit;outline:none;appearance:none;background-image:url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 16 10%27%3E%3Cpath fill=%27%234A6080%27 d=%27M0 0l8 10 8-10z%27/%3E%3C/svg%3E');background-repeat:no-repeat;background-position:right 13px center;background-size:10px;padding-right:34px;cursor:pointer;">
+        <option value="">— choose —</option>
+        ${sessions.filter(s=>s.status==='active').map(s=>`<option value="${s.id}">${s.name} | ${s.equipment.split('–').pop().trim()} (${s.id})</option>`).join('')}
+      </select>
+    </div>
+    <div id="c-detail" style="display:none"></div>
+    <div id="c-extra-fields" style="display:none">
+      <div class="form-row" style="margin-top:0">
+        <div class="field">
+          <label>Issues Encountered</label>
+          <select id="c-issues" style="font-size:13px;padding:10px 13px;border:1.5px solid var(--border);border-radius:var(--radius-sm);width:100%;font-family:inherit;outline:none;appearance:none;background-image:url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 16 10%27%3E%3Cpath fill=%27%234A6080%27 d=%27M0 0l8 10 8-10z%27/%3E%3C/svg%3E');background-repeat:no-repeat;background-position:right 13px center;background-size:10px;padding-right:34px;cursor:pointer;">
+            <option value="none">None</option>
+            <option value="minor">Minor issue — resolved on site</option>
+            <option value="malfunction">Equipment malfunction</option>
+            <option value="sample">Sample issue</option>
+            <option value="aborted">Session aborted</option>
+            <option value="other">Other (see remarks)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Session Outcome <span class="req">*</span></label>
+          <select id="c-outcome" style="font-size:13px;padding:10px 13px;border:1.5px solid var(--border);border-radius:var(--radius-sm);width:100%;font-family:inherit;outline:none;appearance:none;background-image:url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 16 10%27%3E%3Cpath fill=%27%234A6080%27 d=%27M0 0l8 10 8-10z%27/%3E%3C/svg%3E');background-repeat:no-repeat;background-position:right 13px center;background-size:10px;padding-right:34px;cursor:pointer;">
+            <option value="successful">✓ Successful</option>
+            <option value="partial">◑ Partial</option>
+            <option value="failed">✗ Failed / Aborted</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label>Completion Remarks</label>
+        <textarea id="c-rem" placeholder="Describe observations, results, consumables used, or follow-up needed…"></textarea>
+      </div>
+    </div>
+    <button class="submit-btn btn-complete" id="c-btn" style="display:none" onclick="completeSession()">
+      ✓ &nbsp; Complete Session
+    </button>`;
+}
+
+function lookupSession() {
+  const sid = (document.getElementById('c-sid-input').value||'').trim().toUpperCase();
+  const hint = document.getElementById('c-lookup-hint');
+  if (!sid) { hint.textContent='Enter your session ID or select from active sessions below'; hint.style.color='var(--text-muted)'; hideCompleteDetails(); return; }
+  const s = sessions.find(x=>x.id.toUpperCase()===sid && x.status==='active');
+  if (!s) {
+    const closed = sessions.find(x=>x.id.toUpperCase()===sid);
+    hint.textContent = closed ? '⚠ This session is already completed.' : '⚠ No active session found with this ID.';
+    hint.style.color='var(--error)';
+    hideCompleteDetails(); return;
+  }
+  hint.textContent='✓ Session found'; hint.style.color='var(--success)';
+  showCompleteDetails(s);
+}
+
+function onSelectActive() {
+  const sid = document.getElementById('c-sel').value;
+  document.getElementById('c-sid-input').value = sid;
+  document.getElementById('c-lookup-hint').textContent = sid ? '✓ Session found' : 'Enter your session ID or select from active sessions below';
+  document.getElementById('c-lookup-hint').style.color = sid ? 'var(--success)' : 'var(--text-muted)';
+  if (!sid) { hideCompleteDetails(); return; }
+  const s = sessions.find(x=>x.id===sid);
+  if (s) showCompleteDetails(s);
+}
+
+function hideCompleteDetails() {
+  ['c-detail','c-extra-fields','c-btn'].forEach(id=>{ const el=document.getElementById(id); if(el) el.style.display='none'; });
+}
+
+function showCompleteDetails(s) {
+  document.getElementById('c-detail').style.display='';
+  document.getElementById('c-extra-fields').style.display='';
+  document.getElementById('c-btn').style.display='';
+  document.getElementById('c-detail').innerHTML=`
+    <div class="detail-box">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted)">Session details</span>
+        <button onclick="copySessionId('${s.id}')" style="font-size:11px;padding:3px 10px;background:var(--blue-mid);color:#fff;border:none;border-radius:5px;cursor:pointer;font-family:inherit" title="Copy session ID">📋 Copy ID</button>
+      </div>
+      <div class="detail-grid">
+        <div><div class="detail-lbl">Researcher</div><div class="detail-val">${s.name}</div></div>
+        <div><div class="detail-lbl">Equipment</div><div class="detail-val">${s.equipment}</div></div>
+        <div><div class="detail-lbl">Lab</div><div class="detail-val">${s.lab}</div></div>
+        <div><div class="detail-lbl">Request No.</div><div class="detail-val" style="font-family:'JetBrains Mono',monospace">${s.requestNo}</div></div>
+        <div><div class="detail-lbl">Session ID</div><div class="detail-val" style="font-family:'JetBrains Mono',monospace;font-size:12px">${s.id}</div></div>
+        <div><div class="detail-lbl">Started</div><div class="detail-val">${fmtD(s.startTime)} ${fmtT(s.startTime)}</div></div>
+      </div>
+    </div>`;
+}
+
+function updateCompleteSel() {}
+
+function completeSession() {
+  const sid = (document.getElementById('c-sid-input').value||'').trim().toUpperCase();
+  const idx = sessions.findIndex(s=>s.id.toUpperCase()===sid && s.status==='active');
+  if (idx<0) { showToast('Error','No active session found with this ID.',null,true); return; }
+  const outcome = document.getElementById('c-outcome').value;
+  sessions[idx].status='complete';
+  sessions[idx].endTime=new Date().toISOString();
+  sessions[idx].issues=document.getElementById('c-issues').value;
+  sessions[idx].outcome=outcome;
+  sessions[idx].completionRemarks=document.getElementById('c-rem').value.trim();
+  save();
+  const s=sessions[idx];
+  sendToGoogleSheet({
+    action: 'complete',
+    sessionID: s.id,
+    name: s.name,
+    organization: s.dept,
+    lab: s.lab,
+    equipment: s.equipment,
+    requestNo: s.requestNo,
+    samples: s.samples,
+    technique: s.technique,
+    remarks: s.remarks,
+    startTime: s.startTime,
+    endTime: s.endTime,
+    duration: calcHrs(s.startTime, s.endTime),
+    outcome: s.outcome,
+    issues: s.issues,
+    completionRemarks: s.completionRemarks,
+    status: 'complete'
+  });
+  renderActiveSessions(); renderCompletePanel();
+  const outcomeLabel = {successful:'Successful',partial:'Partial',failed:'Failed / Aborted'}[outcome]||outcome;
+  showToast('Session Completed ✓','Duration: '+calcDur(s.startTime,s.endTime)+' · '+outcomeLabel, s.id, false);
+}
+
+// ── TOAST ─────────────────────────────────────────────────────────────────────
+let _tt;
+function showToast(title,msg,id,isErr) {
+  const t=document.getElementById('toast');
+  document.getElementById('toast-title').textContent=title;
+  document.getElementById('toast-msg').textContent=msg;
+  const idEl=document.getElementById('toast-id');
+  if(id){idEl.style.display='inline-block';idEl.textContent=id;}else{idEl.style.display='none';}
+  t.classList.toggle('err',!!isErr); t.classList.add('show');
+  clearTimeout(_tt); _tt=setTimeout(()=>t.classList.remove('show'),4500);
+}
+
+// ── ADMIN ─────────────────────────────────────────────────────────────────────
+function openAdmin(){document.getElementById('admin-overlay').classList.add('open');if(adminLoggedIn)showAdminContent();}
+function closeAdmin(){document.getElementById('admin-overlay').classList.remove('open');}
+function overlayClick(e){if(e.target.id==='admin-overlay')closeAdmin();}
+function adminLogin(){
+  if(document.getElementById('admin-pw').value===ADMIN_PW){
+    adminLoggedIn=true;
+    document.getElementById('admin-login-wrap').style.display='none';
+    showAdminContent();
+  } else { document.getElementById('admin-err').textContent='Incorrect password. Try again.'; }
+}
+function showAdminContent(){
+  document.getElementById('admin-login-wrap').style.display='none';
+  document.getElementById('admin-content-wrap').style.display='';
+  renderStats(); renderTable();
+}
+function renderStats(){
+  const t=sessions.length, a=sessions.filter(s=>s.status==='active').length;
+  const done=sessions.filter(s=>s.status==='complete'&&s.startTime&&s.endTime);
+  const totalMs=done.reduce((acc,s)=>acc+(new Date(s.endTime)-new Date(s.startTime)),0);
+  const totalHrs=(totalMs/3600000).toFixed(1);
+  const avgHrs=done.length?(totalMs/done.length/3600000).toFixed(1):'—';
+  const outcomeCount=(v)=>done.filter(s=>s.outcome===v).length;
+  document.getElementById('stats-bar').innerHTML=`
+    <div class="stat-box"><div class="stat-val">${t}</div><div class="stat-lbl">Total Sessions</div></div>
+    <div class="stat-box"><div class="stat-val" style="color:#16a34a">${a}</div><div class="stat-lbl">Active Now</div></div>
+    <div class="stat-box"><div class="stat-val">${done.length}</div><div class="stat-lbl">Completed</div></div>
+    <div class="stat-box"><div class="stat-val">${totalHrs}h</div><div class="stat-lbl">Total Usage</div></div>
+    <div class="stat-box"><div class="stat-val">${avgHrs}h</div><div class="stat-lbl">Avg Duration</div></div>
+    <div class="stat-box"><div class="stat-val" style="font-size:13px;line-height:1.4">${outcomeCount('successful')}✓ ${outcomeCount('partial')}◑ ${outcomeCount('failed')}✗</div><div class="stat-lbl">Outcomes</div></div>`;
+}
+function renderTable(){
+  const q=(document.getElementById('admin-search').value||'').toLowerCase();
+  const df=document.getElementById('admin-date-from').value;
+  const dt=document.getElementById('admin-date-to').value;
+  let data=sessions.filter(s=>{
+    if(q&&![s.name,s.dept,s.lab,s.equipment,s.requestNo,s.technique,s.id].some(v=>v&&v.toLowerCase().includes(q))) return false;
+    if(df&&s.startTime&&s.startTime.slice(0,10)<df) return false;
+    if(dt&&s.startTime&&s.startTime.slice(0,10)>dt) return false;
+    return true;
+  });
+  const tb=document.getElementById('records-body');
+  if(!data.length){tb.innerHTML='<tr><td colspan="17" style="text-align:center;padding:24px;color:var(--text-muted)">No records found</td></tr>';return;}
+  const outcomeLabel=v=>({successful:'✓ Success',partial:'◑ Partial',failed:'✗ Failed'}[v]||v||'—');
+  const issueLabel=v=>({none:'None',minor:'Minor',malfunction:'Malfunction',sample:'Sample',aborted:'Aborted',other:'Other'}[v]||v||'—');
+  tb.innerHTML=data.map(s=>`
+    <tr>
+      <td class="mono" style="white-space:nowrap">
+        ${s.id}
+        <button onclick="copySessionId('${s.id}')" title="Copy ID" style="margin-left:4px;background:none;border:none;cursor:pointer;color:var(--blue-mid);font-size:11px;padding:0">📋</button>
+      </td>
+      <td>${s.name}</td>
+      <td style="font-size:12px">${s.dept}</td>
+      <td style="font-size:12px">${s.lab}</td>
+      <td style="font-size:12px">${s.equipment}</td>
+      <td class="mono">${s.requestNo}</td>
+      <td style="text-align:center">${s.samples}</td>
+      <td style="font-size:12px">${s.technique}</td>
+      <td style="font-size:12px">${fmtD(s.startTime)}</td>
+      <td class="mono">${fmtT(s.startTime)}</td>
+      <td class="mono">${fmtT(s.endTime)}</td>
+      <td class="mono">${calcHrs(s.startTime,s.endTime)}</td>
+      <td class="${s.status==='active'?'s-active':'s-done'}">${s.status==='active'?'● Active':'✓ Done'}</td>
+      <td style="font-size:12px">${outcomeLabel(s.outcome)}</td>
+      <td style="font-size:12px">${issueLabel(s.issues)}</td>
+      <td style="font-size:11.5px;max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.remarks||'—'}</td>
+      <td style="font-size:11.5px;max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.completionRemarks||'—'}</td>
+    </tr>`).join('');
+}
+
+// ── EXPORT ────────────────────────────────────────────────────────────────────
+function exportCSV(){
+  const hdr='Session ID,Full Name,Organization,Lab,Equipment,Request No.,Samples,Technique,Date,Start Time,End Time,Duration (hrs),Status,Outcome,Issues,Remarks,Completion Remarks';
+  const esc=v=>`"${(v||'').toString().replace(/"/g,'""')}"`;
+  const rows=sessions.map(s=>[esc(s.id),esc(s.name),esc(s.dept),esc(s.lab),esc(s.equipment),esc(s.requestNo),s.samples,esc(s.technique),esc(fmtD(s.startTime)),esc(fmtT(s.startTime)),esc(fmtT(s.endTime)),esc(calcHrs(s.startTime,s.endTime)),esc(s.status),esc(s.outcome||''),esc(s.issues||''),esc(s.remarks),esc(s.completionRemarks)].join(','));
+  const blob=new Blob([[hdr,...rows].join('\n')],{type:'text/csv'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download=`MCL_Usage_${new Date().toISOString().slice(0,10)}.csv`; a.click();
+}
+function exportXLSX(){
+  const hdr=['Session ID','Full Name','Organization','Lab','Equipment','Request No.','Samples','Technique','Date','Start Time','End Time','Duration','Status','Outcome','Issues','Remarks','Completion Remarks'];
+  let html=`<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel"><head><meta charset="utf-8"><style>th{background:#003A70;color:white;font-weight:bold}td,th{border:1px solid #ccc;padding:5px 8px}tr:nth-child(even) td{background:#EBF4FF}</style></head><body><table>`;
+  html+='<tr>'+hdr.map(h=>`<th>${h}</th>`).join('')+'</tr>';
+  sessions.forEach(s=>{html+='<tr>'+[s.id,s.name,s.dept,s.lab,s.equipment,s.requestNo,s.samples,s.technique,fmtD(s.startTime),fmtT(s.startTime),fmtT(s.endTime),calcHrs(s.startTime,s.endTime),s.status,s.outcome||'',s.issues||'',s.remarks,s.completionRemarks].map(v=>`<td>${v||''}</td>`).join('')+'</tr>';});
+  html+='</table></body></html>';
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([html],{type:'application/vnd.ms-excel'}));
+  a.download=`MCL_Usage_${new Date().toISOString().slice(0,10)}.xls`; a.click();
+}
+
+// ── COPY SESSION ID ──────────────────────────────────────────────────────────
+function copySessionId(id) {
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(id).then(()=>showToast('Copied!','Session ID copied to clipboard',null,false)).catch(()=>{});
+  } else {
+    const ta=document.createElement('textarea'); ta.value=id;
+    document.body.appendChild(ta); ta.select(); document.execCommand('copy');
+    document.body.removeChild(ta); showToast('Copied!','Session ID copied to clipboard',null,false);
+  }
+}
+
+// ── DATE FILTER CLEAR ────────────────────────────────────────────────────────
+function clearDateFilter() {
+  document.getElementById('admin-date-from').value='';
+  document.getElementById('admin-date-to').value='';
+  renderTable();
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+renderActiveSessions();
+</script>
+</body>
+</html>
